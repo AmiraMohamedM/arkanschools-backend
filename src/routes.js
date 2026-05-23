@@ -2,9 +2,9 @@ import { Router } from "express";
 import { saveMessage, getAllMessages } from "./messages.js";
 import multer from "multer";
 import { saveJobApplication } from "./jobs.js";
+import { getChatReply } from "./chat.js";
 
 const router = Router();
-
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -52,6 +52,20 @@ router.post("/jobs/apply", upload.single("cv"), async (req, res) => {
     res.status(201).json(result);
   } catch (err) {
     console.error("POST /jobs/apply error:", err);
+    res.status(500).json({ success: false, error: "خطأ في السيرفر" });
+  }
+});
+// POST /api/chat
+router.post("/chat", async (req, res) => {
+  try {
+    const { messages } = req.body;
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ success: false, error: "messages مطلوبة" });
+    }
+    const reply = await getChatReply(messages);
+    res.json({ success: true, reply });
+  } catch (err) {
+    console.error("POST /chat error:", err);
     res.status(500).json({ success: false, error: "خطأ في السيرفر" });
   }
 });
