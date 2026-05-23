@@ -1,6 +1,6 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const SYSTEM_PROMPT = `أنت مساعد ذكي لمدارس أركان التعلم في جدة، المملكة العربية السعودية.
 معلومات المدرسة:
@@ -24,11 +24,19 @@ const SYSTEM_PROMPT = `أنت مساعد ذكي لمدارس أركان التع
 - لا تخترع معلومات غير موجودة أعلاه`;
 
 export async function getChatReply(messages) {
-  const response = await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    max_tokens: 500,
-    messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+  const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    systemInstruction: SYSTEM_PROMPT,
   });
 
-  return response.choices[0].message.content;
+  const history = messages.slice(0, -1).map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
+
+  const chat = model.startChat({ history });
+  const lastMessage = messages[messages.length - 1].content;
+  const result = await chat.sendMessage(lastMessage);
+
+  return result.response.text();
 }
