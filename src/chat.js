@@ -29,13 +29,19 @@ export async function getChatReply(messages) {
     systemInstruction: SYSTEM_PROMPT,
   });
 
-  const history = messages.slice(0, -1).map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
+  // فلتر رسائل assistant/model واحتفظي بـ user فقط في الـ history
+  const userMessages = messages.filter((m) => m.role === "user");
+  const lastMessage = userMessages[userMessages.length - 1]?.content;
+
+  if (!lastMessage) throw new Error("No user message found");
+
+  // بناء الـ history بدون آخر رسالة
+  const history = userMessages.slice(0, -1).map((m) => ({
+    role: "user",
     parts: [{ text: m.content }],
   }));
 
   const chat = model.startChat({ history });
-  const lastMessage = messages[messages.length - 1].content;
   const result = await chat.sendMessage(lastMessage);
 
   return result.response.text();
