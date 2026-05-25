@@ -133,5 +133,40 @@ router.delete("/jobs/:id", requireAdmin, async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+// PATCH /api/admin/forms/:id — تحديث status أو ملاحظة أو تثبيت
+router.patch("/forms/:id", requireAdmin, async (req, res) => {
+  try {
+    const db = await getDb();
+    const { status, note, starred } = req.body;
+    const update = {};
+    if (status !== undefined) update.status = status;
+    if (note !== undefined) update.note = note;
+    if (starred !== undefined) update.starred = starred;
+    await db
+      .collection("messages")
+      .updateOne({ _id: new ObjectId(req.params.id) }, { $set: update });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PATCH /api/admin/jobs/:id — تحديث status أو ملاحظة أو تثبيت
+router.patch("/jobs/:id", requireAdmin, async (req, res) => {
+  try {
+    const db = await getDb();
+    const { status, note, starred } = req.body;
+    const update = {};
+    if (status !== undefined) update.status = status;
+    if (note !== undefined) update.note = note;
+    if (starred !== undefined) update.starred = starred;
+    await db
+      .collection("job_applications")
+      .updateOne({ _id: new ObjectId(req.params.id) }, { $set: update });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 export default router;
